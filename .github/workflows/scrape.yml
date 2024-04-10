@@ -1,0 +1,39 @@
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron:  '* 1,7,13,19 * * *'  # Every 6 hours
+
+jobs:
+  scheduled:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install selenium
+
+    - name: Set up Chrome browser
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y chromium-browser
+
+    - name: Set up ChromeDriver
+      run: |
+        CHROME_VERSION=$(chromium-browser --version | grep -oP "\d+\.\d+\.\d+\.\d+")
+        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
+        wget -q "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" -O /tmp/chromedriver.zip
+        sudo unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
+
+    - name: Run Scrape
+      run: |
+        python scrape_amazon.py
